@@ -1,0 +1,49 @@
+{
+  "name": "giselle",
+  "type": "module",
+  "main": "./index.mjs",
+  "version": "1.0.0",
+  "description": "Giselle cipher, is a symetric key cipher, based on the XOR binary operation & custom bases conversion.",
+  "author": "Yaron Koresh <aharonkoresh1@gmail.com>",
+  "scripts": {
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "license": {
+    "type": "MIT",
+    "url": "https://github.com/YaronKoresh/giselle/raw/master/LICENSE"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YaronKoresh/giselle.git"
+  },
+ "keywords": [
+    "giselle",
+    "base",
+    "elliptic",
+    "curve",
+    "diffie",
+    "Hellman",
+    "cryptography",
+    "ecc",
+    "ecdh",
+    "cipher",
+    "xor",
+    "encryption",
+    "algorithm",
+    "security",
+    "scrypt",
+    "padding",
+    "data",
+    "protection",
+    "unicode",
+    "expander",
+    "decryption",
+    "symetric",
+    "key",
+    "secret",
+    "password"
+  ],
+  "dependencies": {
+    "@yaronkoresh/bases": "^3.0.0"
+  }
+}
