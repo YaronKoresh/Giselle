@@ -1,3 +1,12 @@
+// ../_tools_/src/Zeros.js
+var Zeros = function(str, len) {
+  str = str.toString();
+  while (str.length < len) {
+    str = "0" + str;
+  }
+  return str;
+};
+
 // ../_tools_/src/Split.js
 var Split = function(inp, num) {
   inp = inp.toString();
@@ -8,16 +17,291 @@ var Split = function(inp, num) {
   return out;
 };
 
+// ../_tools_/src/Math.js
+var Factorial = function(end, start = "1", step = "1", action = "pow") {
+  action = action.toString().toLowerCase();
+  let ret = start.toString();
+  let Func = null;
+  if (action === "mul") {
+    Func = Multiply;
+  } else if (action === "pow") {
+    Func = Power;
+  } else if (action === "add") {
+    Func = Add;
+  } else {
+    console.error("Sequence Error: action was not specified!");
+    return;
+  }
+  for (let i = "0"; Greater(i, end) !== i.toString(); i = Add(i, step)) {
+    ret = Func(ret, i);
+  }
+  return ret;
+};
+var Greater = function(a, b) {
+  a = a.toString().split("");
+  b = b.toString().split("");
+  if (a.length > b.length) {
+    return a.join("");
+  }
+  if (a.length < b.length) {
+    return b.join("");
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (+a[i] > +b[i]) {
+      return a.join("");
+    }
+    if (+a[i] < +b[i]) {
+      return b.join("");
+    }
+  }
+  return true;
+};
+var Multiply = function(...nums) {
+  let ret = nums[0].toString();
+  nums = nums.slice(1);
+  for (let i = 0; i < nums.length; i++) {
+    let num = nums[i].toString();
+    if (Add(num, 0) === "0") {
+      return "0";
+    }
+    let value = ret;
+    let counter = "2";
+    while (true) {
+      if (Greater(counter, num) === counter) {
+        break;
+      }
+      ret = Add(ret, value);
+      counter = Add(counter, 1);
+    }
+  }
+  return ret;
+};
+var Power = function(...nums) {
+  let ret = nums[0].toString();
+  nums = nums.slice(1);
+  for (let i = 0; i < nums.length; i++) {
+    let num = nums[i].toString();
+    if (Add(num, 0) === "0") {
+      ret = "1";
+    }
+    let value = ret;
+    let counter = "2";
+    while (true) {
+      if (Greater(counter, num) === counter) {
+        break;
+      }
+      ret = Multiply(ret, value);
+      counter = Add(counter, 1);
+    }
+  }
+  return ret;
+};
+var Add = function(...nums) {
+  nums = nums.map((num) => num.toString().split("").reverse());
+  let ret = ["0"];
+  for (let i = 0; i < Math.max(...nums.map((num) => num.length)); i++) {
+    let sum = 0;
+    nums.map((num) => parseInt(num[i] ?? 0)).map(function(n) {
+      sum += n;
+    });
+    sum = sum.toString().split("").reverse();
+    for (let j = 0; j < sum.length; j++) {
+      let index = j + i;
+      ret[index] = ret[index] ?? "0";
+      let n = (parseInt(ret[index]) + parseInt(sum[j] ?? 0)).toString().split("").reverse();
+      ret[index] = n[0];
+      if (n.length > 1) {
+        index++;
+        n = n.slice(1).join("");
+        let retToBeChanged = ret.slice(index).reverse().join("");
+        ret = ret.slice(0, index + 1);
+        ret.push(...Add(retToBeChanged, n).split("").reverse());
+      }
+    }
+  }
+  return ret.reverse().join("");
+};
+
+// ../_tools_/src/Round.js
+var RoundUp = function(input, factor) {
+  return factor - input % factor + input;
+};
+
+// ../_tools_/src/Bits.js
+var MeasureBits = function(num, roundUp = true) {
+  return roundUp == true ? Math.ceil(Math.log2(num)) : Math.log2(num);
+};
+
+// ../_tools_/src/Unicode.js
+var NumberToCharset = function(charset, num) {
+  charset = charset.split("");
+  let bs = charset.length;
+  const UpdateOutputValue = function(outputCharsetIndexes2) {
+    let sum = "0";
+    for (let i2 = 0; i2 < outputCharsetIndexes2.length; i2++) {
+      sum = Add(sum, Multiply(Power(bs, i2), outputCharsetIndexes2[i2]));
+    }
+    return sum;
+  };
+  let value = num.toString();
+  let outputCharsetIndexes = ["0"];
+  let outputIndexOutOfUsage = 1;
+  let power = Power(bs, outputIndexOutOfUsage);
+  let outputValue = "0";
+  while (Greater(power, value) !== power) {
+    outputCharsetIndexes.push("0");
+    outputIndexOutOfUsage++;
+    power = Power(bs, outputIndexOutOfUsage);
+  }
+  let currentOutputIndex = outputIndexOutOfUsage - 1;
+  while (currentOutputIndex >= 0) {
+    let indexValue = Power(bs, currentOutputIndex);
+    outputValue = UpdateOutputValue(outputCharsetIndexes);
+    let _outputValue = Add(indexValue, outputValue);
+    while (Greater(_outputValue, value) !== _outputValue) {
+      outputCharsetIndexes[currentOutputIndex] = Add(outputCharsetIndexes[currentOutputIndex], 1);
+      outputValue = _outputValue;
+      _outputValue = Add(indexValue, outputValue);
+    }
+    currentOutputIndex--;
+  }
+  return outputCharsetIndexes.map(function(charsetIndex) {
+    return charset[+charsetIndex];
+  }).reverse().join("");
+};
+var CharsetToNumbers = function(str, charset = null) {
+  let ret = [];
+  str = str.split("").reverse().join("");
+  for (let i = 0; true; i++) {
+    if (typeof str.codePointAt(i) === "undefined") {
+      ret = ret.reverse();
+      while (true) {
+        if (ret.length > 0 && ret[0] === charset.split("")[0]) {
+          ret = ret.slice(1);
+        } else {
+          return ret;
+        }
+      }
+    }
+    ret.push(
+      charset === null ? str.codePointAt(i).toString() : Multiply(Power(charset.length, i), charset.indexOf(str.split("")[i]))
+    );
+  }
+};
+var NumbersToCharset = function(nums, charset = null) {
+  nums = [nums].flat();
+  if (charset === null) {
+    return String.fromCodePoint(...nums.map((value) => parseInt(value))).toString();
+  }
+  let bits = MeasureBits(charset.length);
+  let size = RoundUp(bits, 8) / bits;
+  let ret = nums.map((value) => NumberToCharset(charset, value)).join("");
+  while (true) {
+    if (ret.length > 1 && ret.slice(0, 1) === charset.split("")[0]) {
+      ret = ret.slice(1);
+    } else {
+      return ret;
+    }
+  }
+};
+var StringToBytes = function(str) {
+  let e = new TextEncoder();
+  let arr = e.encode(str);
+  return [...arr];
+};
+var BytesToString = function(...bytes) {
+  bytes = [bytes].flat().flat();
+  bytes = new Uint8Array(bytes);
+  let d = new TextDecoder();
+  return d.decode(bytes);
+};
+
+// ../_tools_/src/Bases.js
+var Bases = function(str, charset, mode, padding = "=") {
+  let from = null;
+  let to = null;
+  if (mode.toString() === "1" || mode.toString().toLowerCase() === "encodestring") {
+    to = charset;
+  } else if (mode.toString() === "0" || mode.toString().toLowerCase() === "decodestring") {
+    from = charset;
+  } else if (mode.toString() === "11" || mode.toString().toLowerCase() === "encodenumber") {
+    from = "0123456789";
+    to = charset;
+  } else if (mode.toString() === "10" || mode.toString().toLowerCase() === "decodenumber") {
+    to = "0123456789";
+    from = charset;
+  }
+  str = str.toString();
+  from = from === null ? from : from.toString();
+  to = to === null ? to : to.toString();
+  let toLength = to === null ? null : to.length;
+  if (typeof toLength === "number" && toLength < 2) {
+    return null;
+  }
+  let toBits = toLength === null ? null : MeasureBits(toLength);
+  let toFloatBits = toLength === null ? null : MeasureBits(toLength, false);
+  let toSize = toBits === null ? null : RoundUp(toBits, 8) / toBits;
+  let toFloat = toFloatBits !== parseInt(toFloatBits);
+  let fromLength = from === null ? null : from.length;
+  if (typeof fromLength === "number" && fromLength < 2) {
+    return null;
+  }
+  let fromBits = fromLength === null ? null : MeasureBits(fromLength);
+  let fromFloatBits = fromLength === null ? null : MeasureBits(fromLength, false);
+  let fromSize = fromBits === null ? null : RoundUp(fromBits, 8) / fromBits;
+  let fromFloat = fromFloatBits !== parseInt(fromFloatBits);
+  let num = "";
+  let out = [];
+  if (from === to) {
+    return str;
+  }
+  if (from !== null) {
+    let re = new RegExp("(" + padding + "){1,}$", "g");
+    str = str.replaceAll(re, "");
+  }
+  if (from !== null && to !== null) {
+    CharsetToNumbers(str, from).reverse().map(function(value) {
+      num = Add(num, value);
+    });
+    out = NumbersToCharset(num, to);
+  } else if (from === null && to !== null && toFloat === true) {
+    console.error("String Encoding/Decoding with some bases may be unsupported!");
+    console.error("Base" + toLength + " is unfortunately one of them.");
+    return false;
+  } else if (from === null && to !== null) {
+    let bytes = StringToBytes(str);
+    let bin = bytes.map((byte) => Zeros((+byte).toString(2), 8)).join("");
+    bin += "0".repeat((toBits - bin.length % toBits) % toBits);
+    let bins = Split(bin, toBits);
+    let values = bins.map((b) => parseInt(b, 2));
+    out = NumbersToCharset(values, to);
+  } else if (from !== null && to === null && fromFloat === true) {
+    console.error("String Encoding/Decoding with some bases may be unsupported!");
+    console.error("Base" + toLength + " is unfortunately one of them.");
+    return false;
+  } else if (from !== null && to === null) {
+    let charsLength = Split(str, fromSize).length;
+    let values = CharsetToNumbers(str, from);
+    let bin = values.map((v) => Zeros(parseInt(v).toString(2), fromBits)).join("").slice(0, charsLength * 8);
+    let bytes = Split(bin, 8).map((b) => parseInt(b, 2));
+    out = BytesToString(bytes);
+  }
+  if (toSize !== null) {
+    out += padding.repeat((toSize - out.length % toSize) % toSize);
+  }
+  return out;
+};
+
 // ../_tools_/src/Charsets.js
-var base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+var hex = "0123456789abcdef";
 
 // ../_tools_/src/GenerateRandom.js
-var SecureRandom8U = function(count) {
-  let bytes = new Uint8Array(count);
+var SecureRandom8U = function(count2) {
+  let bytes = new Uint8Array(count2);
   return crypto.getRandomValues(bytes);
 };
-var SecureRandom16U = function(count) {
-  let bytes = new Uint16Array(count);
+var SecureRandom16U = function(count2) {
+  let bytes = new Uint16Array(count2);
   return crypto.getRandomValues(bytes);
 };
 var GenerateRandomNumber = function(len = 0) {
@@ -26,9 +310,467 @@ var GenerateRandomNumber = function(len = 0) {
   }
   return SecureRandom16U(len).join("").slice(0, len);
 };
+var GenerateRandomBinary = function(len) {
+  if (len < 1) {
+    len = SecureRandom8U(1)[0];
+  }
+  let ret = "";
+  while (true) {
+    ret += Bases(GenerateRandomNumber(1), "01", 11, "");
+    if (ret.length >= len) {
+      return ret.slice(0, len);
+    }
+  }
+};
+var GenerateRandom = GenerateRandomNumber;
+
+// ../_tools_/src/Scrypt.js
+var buffer = await import("buffer/index.js");
+var Buffer = buffer.Buffer;
+var MAX_VALUE = 2147483647;
+function SHA256(m) {
+  const K = new Uint32Array([
+    1116352408,
+    1899447441,
+    3049323471,
+    3921009573,
+    961987163,
+    1508970993,
+    2453635748,
+    2870763221,
+    3624381080,
+    310598401,
+    607225278,
+    1426881987,
+    1925078388,
+    2162078206,
+    2614888103,
+    3248222580,
+    3835390401,
+    4022224774,
+    264347078,
+    604807628,
+    770255983,
+    1249150122,
+    1555081692,
+    1996064986,
+    2554220882,
+    2821834349,
+    2952996808,
+    3210313671,
+    3336571891,
+    3584528711,
+    113926993,
+    338241895,
+    666307205,
+    773529912,
+    1294757372,
+    1396182291,
+    1695183700,
+    1986661051,
+    2177026350,
+    2456956037,
+    2730485921,
+    2820302411,
+    3259730800,
+    3345764771,
+    3516065817,
+    3600352804,
+    4094571909,
+    275423344,
+    430227734,
+    506948616,
+    659060556,
+    883997877,
+    958139571,
+    1322822218,
+    1537002063,
+    1747873779,
+    1955562222,
+    2024104815,
+    2227730452,
+    2361852424,
+    2428436474,
+    2756734187,
+    3204031479,
+    3329325298
+  ]);
+  let h0 = 1779033703, h1 = 3144134277, h2 = 1013904242, h3 = 2773480762;
+  let h4 = 1359893119, h5 = 2600822924, h6 = 528734635, h7 = 1541459225;
+  const w = new Uint32Array(64);
+  function blocks(p2) {
+    let off = 0, len = p2.length;
+    while (len >= 64) {
+      let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7, u, i2, j, t1, t2;
+      for (i2 = 0; i2 < 16; i2++) {
+        j = off + i2 * 4;
+        w[i2] = (p2[j] & 255) << 24 | (p2[j + 1] & 255) << 16 | (p2[j + 2] & 255) << 8 | p2[j + 3] & 255;
+      }
+      for (i2 = 16; i2 < 64; i2++) {
+        u = w[i2 - 2];
+        t1 = (u >>> 17 | u << 32 - 17) ^ (u >>> 19 | u << 32 - 19) ^ u >>> 10;
+        u = w[i2 - 15];
+        t2 = (u >>> 7 | u << 32 - 7) ^ (u >>> 18 | u << 32 - 18) ^ u >>> 3;
+        w[i2] = (t1 + w[i2 - 7] | 0) + (t2 + w[i2 - 16] | 0) | 0;
+      }
+      for (i2 = 0; i2 < 64; i2++) {
+        t1 = (((e >>> 6 | e << 32 - 6) ^ (e >>> 11 | e << 32 - 11) ^ (e >>> 25 | e << 32 - 25)) + (e & f ^ ~e & g) | 0) + (h + (K[i2] + w[i2] | 0) | 0) | 0;
+        t2 = ((a >>> 2 | a << 32 - 2) ^ (a >>> 13 | a << 32 - 13) ^ (a >>> 22 | a << 32 - 22)) + (a & b ^ a & c ^ b & c) | 0;
+        h = g;
+        g = f;
+        f = e;
+        e = d + t1 | 0;
+        d = c;
+        c = b;
+        b = a;
+        a = t1 + t2 | 0;
+      }
+      h0 = h0 + a | 0;
+      h1 = h1 + b | 0;
+      h2 = h2 + c | 0;
+      h3 = h3 + d | 0;
+      h4 = h4 + e | 0;
+      h5 = h5 + f | 0;
+      h6 = h6 + g | 0;
+      h7 = h7 + h | 0;
+      off += 64;
+      len -= 64;
+    }
+  }
+  blocks(m);
+  let i, bytesLeft = m.length % 64, bitLenHi = m.length / 536870912 | 0, bitLenLo = m.length << 3, numZeros = bytesLeft < 56 ? 56 : 120, p = m.slice(m.length - bytesLeft, m.length);
+  p.push(128);
+  for (i = bytesLeft + 1; i < numZeros; i++) {
+    p.push(0);
+  }
+  p.push(bitLenHi >>> 24 & 255);
+  p.push(bitLenHi >>> 16 & 255);
+  p.push(bitLenHi >>> 8 & 255);
+  p.push(bitLenHi >>> 0 & 255);
+  p.push(bitLenLo >>> 24 & 255);
+  p.push(bitLenLo >>> 16 & 255);
+  p.push(bitLenLo >>> 8 & 255);
+  p.push(bitLenLo >>> 0 & 255);
+  blocks(p);
+  return [
+    h0 >>> 24 & 255,
+    h0 >>> 16 & 255,
+    h0 >>> 8 & 255,
+    h0 >>> 0 & 255,
+    h1 >>> 24 & 255,
+    h1 >>> 16 & 255,
+    h1 >>> 8 & 255,
+    h1 >>> 0 & 255,
+    h2 >>> 24 & 255,
+    h2 >>> 16 & 255,
+    h2 >>> 8 & 255,
+    h2 >>> 0 & 255,
+    h3 >>> 24 & 255,
+    h3 >>> 16 & 255,
+    h3 >>> 8 & 255,
+    h3 >>> 0 & 255,
+    h4 >>> 24 & 255,
+    h4 >>> 16 & 255,
+    h4 >>> 8 & 255,
+    h4 >>> 0 & 255,
+    h5 >>> 24 & 255,
+    h5 >>> 16 & 255,
+    h5 >>> 8 & 255,
+    h5 >>> 0 & 255,
+    h6 >>> 24 & 255,
+    h6 >>> 16 & 255,
+    h6 >>> 8 & 255,
+    h6 >>> 0 & 255,
+    h7 >>> 24 & 255,
+    h7 >>> 16 & 255,
+    h7 >>> 8 & 255,
+    h7 >>> 0 & 255
+  ];
+}
+function PBKDF2_HMAC_SHA256_OneIter(password, salt, dkLen) {
+  password = password.length <= 64 ? password : SHA256(password);
+  const innerLen = 64 + salt.length + 4;
+  const inner = new Array(innerLen);
+  const outerKey = new Array(64);
+  let i;
+  let dk = [];
+  for (i = 0; i < 64; i++) {
+    inner[i] = 54;
+  }
+  for (i = 0; i < password.length; i++) {
+    inner[i] ^= password[i];
+  }
+  for (i = 0; i < salt.length; i++) {
+    inner[64 + i] = salt[i];
+  }
+  for (i = innerLen - 4; i < innerLen; i++) {
+    inner[i] = 0;
+  }
+  for (i = 0; i < 64; i++)
+    outerKey[i] = 92;
+  for (i = 0; i < password.length; i++)
+    outerKey[i] ^= password[i];
+  function incrementCounter() {
+    for (let i2 = innerLen - 1; i2 >= innerLen - 4; i2--) {
+      inner[i2]++;
+      if (inner[i2] <= 255)
+        return;
+      inner[i2] = 0;
+    }
+  }
+  while (dkLen >= 32) {
+    incrementCounter();
+    dk = dk.concat(SHA256(outerKey.concat(SHA256(inner))));
+    dkLen -= 32;
+  }
+  if (dkLen > 0) {
+    incrementCounter();
+    dk = dk.concat(SHA256(outerKey.concat(SHA256(inner))).slice(0, dkLen));
+  }
+  return dk;
+}
+function blockmix_salsa8(BY, Yi, r, x, _X) {
+  let i;
+  arraycopy(BY, (2 * r - 1) * 16, _X, 0, 16);
+  for (i = 0; i < 2 * r; i++) {
+    blockxor(BY, i * 16, _X, 16);
+    salsa20_8(_X, x);
+    arraycopy(_X, 0, BY, Yi + i * 16, 16);
+  }
+  for (i = 0; i < r; i++) {
+    arraycopy(BY, Yi + i * 2 * 16, BY, i * 16, 16);
+  }
+  for (i = 0; i < r; i++) {
+    arraycopy(BY, Yi + (i * 2 + 1) * 16, BY, (i + r) * 16, 16);
+  }
+}
+function R(a, b) {
+  return a << b | a >>> 32 - b;
+}
+function salsa20_8(B, x) {
+  arraycopy(B, 0, x, 0, 16);
+  for (let i = 8; i > 0; i -= 2) {
+    x[4] ^= R(x[0] + x[12], 7);
+    x[8] ^= R(x[4] + x[0], 9);
+    x[12] ^= R(x[8] + x[4], 13);
+    x[0] ^= R(x[12] + x[8], 18);
+    x[9] ^= R(x[5] + x[1], 7);
+    x[13] ^= R(x[9] + x[5], 9);
+    x[1] ^= R(x[13] + x[9], 13);
+    x[5] ^= R(x[1] + x[13], 18);
+    x[14] ^= R(x[10] + x[6], 7);
+    x[2] ^= R(x[14] + x[10], 9);
+    x[6] ^= R(x[2] + x[14], 13);
+    x[10] ^= R(x[6] + x[2], 18);
+    x[3] ^= R(x[15] + x[11], 7);
+    x[7] ^= R(x[3] + x[15], 9);
+    x[11] ^= R(x[7] + x[3], 13);
+    x[15] ^= R(x[11] + x[7], 18);
+    x[1] ^= R(x[0] + x[3], 7);
+    x[2] ^= R(x[1] + x[0], 9);
+    x[3] ^= R(x[2] + x[1], 13);
+    x[0] ^= R(x[3] + x[2], 18);
+    x[6] ^= R(x[5] + x[4], 7);
+    x[7] ^= R(x[6] + x[5], 9);
+    x[4] ^= R(x[7] + x[6], 13);
+    x[5] ^= R(x[4] + x[7], 18);
+    x[11] ^= R(x[10] + x[9], 7);
+    x[8] ^= R(x[11] + x[10], 9);
+    x[9] ^= R(x[8] + x[11], 13);
+    x[10] ^= R(x[9] + x[8], 18);
+    x[12] ^= R(x[15] + x[14], 7);
+    x[13] ^= R(x[12] + x[15], 9);
+    x[14] ^= R(x[13] + x[12], 13);
+    x[15] ^= R(x[14] + x[13], 18);
+  }
+  for (let i = 0; i < 16; ++i) {
+    B[i] += x[i];
+  }
+}
+function blockxor(S, Si, D, len) {
+  for (let i = 0; i < len; i++) {
+    D[i] ^= S[Si + i];
+  }
+}
+function arraycopy(src, srcPos, dest, destPos, length) {
+  while (length--) {
+    dest[destPos++] = src[srcPos++];
+  }
+}
+function checkBufferish(o) {
+  if (!o || typeof o.length !== "number") {
+    return false;
+  }
+  for (let i = 0; i < o.length; i++) {
+    const v = o[i];
+    if (typeof v !== "number" || v % 1 || v < 0 || v >= 256) {
+      return false;
+    }
+  }
+  return true;
+}
+function ensureInteger(value, name) {
+  if (typeof value !== "number" || value % 1) {
+    throw new Error("invalid " + name);
+  }
+  return value;
+}
+var Scrypt = function(password, salt = GenerateRandom(6), len = 29, power = 1) {
+  let N = Math.pow(2, power);
+  let r = Math.pow(8, power);
+  let p = Math.pow(4, power);
+  let dkLen = len;
+  let ret = {
+    salt,
+    cost: N,
+    memory: r,
+    threads: p,
+    octets: dkLen
+  };
+  let callback = false;
+  password = Buffer.from(password.normalize("NFKC"));
+  salt = Buffer.from(salt.normalize("NFKC"));
+  N = ensureInteger(N, "N");
+  r = ensureInteger(r, "r");
+  p = ensureInteger(p, "p");
+  dkLen = ensureInteger(dkLen, "dkLen");
+  if (N === 0 || (N & N - 1) !== 0) {
+    throw new Error("N must be power of 2");
+  }
+  if (N > MAX_VALUE / 128 / r) {
+    throw new Error("N too large");
+  }
+  if (r > MAX_VALUE / 128 / p) {
+    throw new Error("r too large");
+  }
+  if (!checkBufferish(password)) {
+    throw new Error("password must be an array or buffer");
+  }
+  password = Array.prototype.slice.call(password);
+  if (!checkBufferish(salt)) {
+    throw new Error("salt must be an array or buffer");
+  }
+  salt = Array.prototype.slice.call(salt);
+  let b = PBKDF2_HMAC_SHA256_OneIter(password, salt, p * 128 * r);
+  const B = new Uint32Array(p * 32 * r);
+  for (let i = 0; i < B.length; i++) {
+    const j = i * 4;
+    B[i] = (b[j + 3] & 255) << 24 | (b[j + 2] & 255) << 16 | (b[j + 1] & 255) << 8 | (b[j + 0] & 255) << 0;
+  }
+  const XY = new Uint32Array(64 * r);
+  const V = new Uint32Array(32 * r * N);
+  const Yi = 32 * r;
+  const x = new Uint32Array(16);
+  const _X = new Uint32Array(16);
+  const totalOps = p * N * 2;
+  let currentOp = 0;
+  let lastPercent10 = null;
+  let stop = false;
+  let state = 0;
+  let i0 = 0, i1;
+  let Bi;
+  const limit = callback ? parseInt(1e3 / r) : 4294967295;
+  const nextTick = typeof setImmediate !== "undefined" ? setImmediate : setTimeout;
+  const incrementalSMix = function() {
+    if (stop) {
+      return callback(new Error("cancelled"), currentOp / totalOps);
+    }
+    let steps;
+    switch (state) {
+      case 0:
+        Bi = i0 * 32 * r;
+        arraycopy(B, Bi, XY, 0, Yi);
+        state = 1;
+        i1 = 0;
+      case 1:
+        steps = N - i1;
+        if (steps > limit) {
+          steps = limit;
+        }
+        for (let i = 0; i < steps; i++) {
+          arraycopy(XY, 0, V, (i1 + i) * Yi, Yi);
+          blockmix_salsa8(XY, Yi, r, x, _X);
+        }
+        i1 += steps;
+        currentOp += steps;
+        if (callback) {
+          const percent10 = parseInt(1e3 * currentOp / totalOps);
+          if (percent10 !== lastPercent10) {
+            stop = callback(null, currentOp / totalOps);
+            if (stop) {
+              break;
+            }
+            lastPercent10 = percent10;
+          }
+        }
+        if (i1 < N) {
+          break;
+        }
+        i1 = 0;
+        state = 2;
+      case 2:
+        steps = N - i1;
+        if (steps > limit) {
+          steps = limit;
+        }
+        for (let i = 0; i < steps; i++) {
+          const offset = (2 * r - 1) * 16;
+          const j = XY[offset] & N - 1;
+          blockxor(V, j * Yi, XY, Yi);
+          blockmix_salsa8(XY, Yi, r, x, _X);
+        }
+        i1 += steps;
+        currentOp += steps;
+        if (callback) {
+          const percent10 = parseInt(1e3 * currentOp / totalOps);
+          if (percent10 !== lastPercent10) {
+            stop = callback(null, currentOp / totalOps);
+            if (stop) {
+              break;
+            }
+            lastPercent10 = percent10;
+          }
+        }
+        if (i1 < N) {
+          break;
+        }
+        arraycopy(XY, 0, B, Bi, Yi);
+        i0++;
+        if (i0 < p) {
+          state = 0;
+          break;
+        }
+        b = [];
+        for (let i = 0; i < B.length; i++) {
+          b.push(B[i] >> 0 & 255);
+          b.push(B[i] >> 8 & 255);
+          b.push(B[i] >> 16 & 255);
+          b.push(B[i] >> 24 & 255);
+        }
+        const derivedKey = PBKDF2_HMAC_SHA256_OneIter(password, b, dkLen);
+        if (callback) {
+          callback(null, 1, derivedKey);
+        }
+        return derivedKey;
+    }
+    if (callback) {
+      nextTick(incrementalSMix);
+    }
+  };
+  if (!callback) {
+    while (true) {
+      const derivedKey = incrementalSMix();
+      if (derivedKey != void 0) {
+        ret.hash = Buffer.from(derivedKey).toString("hex");
+        return ret;
+      }
+    }
+  }
+  incrementalSMix();
+};
 
 // ../_tools_/src/Giselle.js
-import { Bases as Bases2 } from "@yaronkoresh/bases";
+import { Bases as Bases3 } from "@yaronkoresh/bases";
 
 // ../_tools_/src/Xor.js
 var XorBinaryString = function(a, b) {
@@ -41,66 +783,94 @@ var XorBinaryString = function(a, b) {
   return res;
 };
 
+// ../_tools_/src/Padding.js
+import { Bases as Bases2 } from "@yaronkoresh/bases";
+var paddingLengthFactor = 8;
+var Pad = function(msg) {
+  msg = msg.toString();
+  const diff = PaddingLength(msg);
+  if (diff == 0) {
+    return msg;
+  }
+  let hash = Scrypt(msg, msg, paddingLengthFactor, 1).hash.toString().slice(0, diff);
+  return hash + msg;
+};
+var Unpad = function(paddedText) {
+  paddedText = paddedText.toString();
+  let len = paddedText.length;
+  for (let i = paddingLengthFactor; i < paddingLengthFactor * 2 - 1; i++) {
+    const maybeHash = paddedText.slice(0, i);
+    const msg = paddedText.slice(i);
+    let hash = Scrypt(msg, msg, paddingLengthFactor, 1).hash.toString().slice(0, i);
+    if (hash == maybeHash) {
+      return msg;
+    }
+  }
+  return paddedText;
+};
+var PaddingLength = function(txt) {
+  return RoundUp(txt.length, paddingLengthFactor) - txt.length + paddingLengthFactor;
+};
+
 // ../_tools_/src/Giselle.js
-var Encrypt = function(key, str) {
-  str = Bases2(str, "01", 1);
-  let limit = Math.max(str.length, key.length);
-  limit = 64 - limit % 64 + limit;
-  let salt = GenerateSalt(limit);
-  let xor = XorBinaryString(salt, str);
-  let eKey = ExpandKey(key, limit);
-  xor = _Encrypt(eKey, xor);
-  salt = salt.replaceAll("0", "2");
-  xor = xor.replaceAll("1", "5");
-  xor = Split(xor, 16).map((chunk) => Bases2(chunk, "12345", 10).toString().replaceAll("=", "")).map((chunk) => Bases2(chunk, base62, 11).toString().replaceAll("=", "")).join(":");
-  salt = Split(salt, 32).map((chunk) => Bases2(chunk, "012", 10).toString().replaceAll("=", "")).map((chunk) => Bases2(chunk, base62, 11).toString().replaceAll("=", "")).join(":");
-  return [xor, salt, limit].join("::");
-};
-var Decrypt = function(key, str) {
-  const salt = str.split("::")[1].split(":").map((chunk) => Bases2(chunk, base62, 10).toString().replaceAll("=", "")).map((chunk) => Bases2(chunk, "012", 11).toString().replaceAll("=", "")).join("").replaceAll("2", "0");
-  const limit = str.split("::")[2];
-  let xor = str.split("::")[0].split(":").map((chunk) => Bases2(chunk, base62, 10).toString().replaceAll("=", "")).map((chunk) => Bases2(chunk, "12345", 11).toString().replaceAll("=", "")).join("").replaceAll("5", "1");
-  let eKey = ExpandKey(key, limit);
-  xor = _Decrypt(eKey, xor);
-  str = XorBinaryString(salt, xor);
-  str = Bases2(str, "01", 0);
-  return str;
-};
-var _Encrypt = function(key, str) {
-  key = key.split("");
-  str = str.split("");
-  let ret = "";
-  for (let i = 0; i < Math.max(key.length, str.length); i++) {
-    ret += (parseInt(key[i] ?? 0) + parseInt(str[i] ?? 0) + 1).toString();
+var Encrypt = function(key, msg, power = 1) {
+  power = Math.ceil(power, 1);
+  let loopPower = Math.ceil(Factorial((power - 1) * 100), 1);
+  let pad = Pad(msg);
+  let bytes = StringToBytes(pad);
+  let bins = bytes.map((byte) => Bases3(byte, "01", 11, ""));
+  let bin = bins.map((b) => Zeros(b, 8)).join("");
+  let salt = GenerateRandomBinary(bin.length);
+  let bin2 = XorBinaryString(salt, bin);
+  for (let i = "0"; Greater(i, loopPower) !== i.toString(); i = Add(i, 1)) {
+    key = ExpandKey(key, bin.length, power);
+    bin2 = XorBinaryString(key, bin2);
   }
-  return ret;
+  let out64 = Split(bin2, 4);
+  out64 = out64.map((b) => Bases3(b, "01", 10, ""));
+  out64 = out64.map((b) => Bases3(b, hex, 11, ""));
+  out64 = out64.join("");
+  let salt64 = Split(salt, 4);
+  salt64 = salt64.map((b) => Bases3(b, "01", 10, ""));
+  salt64 = salt64.map((b) => Bases3(b, hex, 11, ""));
+  salt64 = salt64.join("");
+  return [out64, salt64].join(":");
 };
-var _Decrypt = function(key, mrg) {
-  mrg = mrg.split("");
-  key = key.split("");
-  let ret = "";
-  for (let i = 0; i < mrg.length; i++) {
-    ret += (parseInt(mrg[i] - 1) - parseInt(key[i] ?? 0)).toString();
+var Decrypt = function(key, ciphertext, power = 1) {
+  power = Math.ceil(power, 1);
+  let loopPower = Math.ceil(Factorial((power - 1) * 100), 1);
+  let in64 = ciphertext.split(":")[0];
+  let salt64 = ciphertext.split(":")[1];
+  let salt = salt64.split("");
+  salt = salt.map((b) => Bases3(b, hex, 10, ""));
+  salt = salt.map((b) => Bases3(b, "01", 11, ""));
+  salt = salt.map((b) => Zeros(b, 4));
+  salt = salt.join("");
+  let bin2 = in64.split("");
+  bin2 = bin2.map((b) => Bases3(b, hex, 10, ""));
+  bin2 = bin2.map((b) => Bases3(b, "01", 11, ""));
+  bin2 = bin2.map((b) => Zeros(b, 4));
+  bin2 = bin2.join("");
+  for (let i = "0"; Greater(i, loopPower) !== i.toString(); i = Add(i, 1)) {
+    key = ExpandKey(key, salt.length, power);
+    bin2 = XorBinaryString(key, bin2);
   }
-  return ret;
+  let bin = XorBinaryString(salt, bin2);
+  let bins = Split(bin, 8);
+  let bytes = bins.map((b) => Bases3(b, "01", 10, ""));
+  let pad = BytesToString(...bytes);
+  let msg = Unpad(pad);
+  return msg;
 };
-var GenerateSalt = function(len) {
-  let ret = "";
-  while (true) {
-    ret += Bases2(GenerateRandomNumber(15), "01", 11);
-    if (ret.length >= len) {
-      return ret.slice(0, len);
-    }
-  }
-};
-var ExpandKey = function(key, limit) {
-  key = key.split("").map((char) => char.charCodeAt(0)).join("");
-  while (true) {
-    key = Split(key, 15).map((num) => Bases2(num, "012", 11)).join("");
-    if (key.length >= limit) {
-      return key.slice(0, limit);
-    }
-  }
+var ExpandKey = function(key, bits, power) {
+  let bytes = parseInt(bits) / 8;
+  key = Scrypt(key, key, bytes, Math.floor(power, 4)).hash.toString();
+  key = Split(key, 1);
+  key = key.map((hx) => Bases3(hx, hex, 10, ""));
+  key = key.map((num) => Bases3(num, "01", 11, ""));
+  key = key.map((b) => Zeros(b, 4));
+  key = key.join("");
+  return key;
 };
 
 // ../_tools_/src/SecureRandom.js
@@ -1748,17 +2518,17 @@ function pointFpMultiply(k) {
   var e = k;
   var h = e.multiply(new BigInteger("3"));
   var neg = this.negate();
-  var R = this;
+  var R2 = this;
   var i;
   for (i = h.bitLength() - 2; i > 0; --i) {
-    R = R.twice();
+    R2 = R2.twice();
     var hBit = h.testBit(i);
     var eBit = e.testBit(i);
     if (hBit != eBit) {
-      R = R.add(hBit ? this : neg);
+      R2 = R2.add(hBit ? this : neg);
     }
   }
-  return R;
+  return R2;
 }
 function pointFpMultiplyTwo(j, x, k) {
   var i;
@@ -1766,24 +2536,24 @@ function pointFpMultiplyTwo(j, x, k) {
     i = j.bitLength() - 1;
   else
     i = k.bitLength() - 1;
-  var R = this.curve.getInfinity();
+  var R2 = this.curve.getInfinity();
   var both = this.add(x);
   while (i >= 0) {
-    R = R.twice();
+    R2 = R2.twice();
     if (j.testBit(i)) {
       if (k.testBit(i)) {
-        R = R.add(both);
+        R2 = R2.add(both);
       } else {
-        R = R.add(this);
+        R2 = R2.add(this);
       }
     } else {
       if (k.testBit(i)) {
-        R = R.add(x);
+        R2 = R2.add(x);
       }
     }
     --i;
   }
-  return R;
+  return R2;
 }
 ECPointFp.prototype.getX = pointFpGetX;
 ECPointFp.prototype.getY = pointFpGetY;
@@ -1794,7 +2564,7 @@ ECPointFp.prototype.add = pointFpAdd;
 ECPointFp.prototype.twice = pointFpTwice;
 ECPointFp.prototype.multiply = pointFpMultiply;
 ECPointFp.prototype.multiplyTwo = pointFpMultiplyTwo;
-function EurveFp(q, a, b) {
+function CurveFp(q, a, b) {
   this.q = q;
   this.a = this.fromBigInteger(a);
   this.b = this.fromBigInteger(b);
@@ -1858,15 +2628,15 @@ function curveFpEncodePointHex(p) {
   }
   return "04" + xHex + yHex;
 }
-EurveFp.prototype.getQ = curveFpGetQ;
-EurveFp.prototype.getA = curveFpGetA;
-EurveFp.prototype.getB = curveFpGetB;
-EurveFp.prototype.equals = curveFpEquals;
-EurveFp.prototype.getInfinity = curveFpGetInfinity;
-EurveFp.prototype.fromBigInteger = curveFpFromBigInteger;
-EurveFp.prototype.reduce = curveReduce;
-EurveFp.prototype.decodePointHex = curveFpDecodePointHex;
-EurveFp.prototype.encodePointHex = curveFpEncodePointHex;
+CurveFp.prototype.getQ = curveFpGetQ;
+CurveFp.prototype.getA = curveFpGetA;
+CurveFp.prototype.getB = curveFpGetB;
+CurveFp.prototype.equals = curveFpEquals;
+CurveFp.prototype.getInfinity = curveFpGetInfinity;
+CurveFp.prototype.fromBigInteger = curveFpFromBigInteger;
+CurveFp.prototype.reduce = curveReduce;
+CurveFp.prototype.decodePointHex = curveFpDecodePointHex;
+CurveFp.prototype.encodePointHex = curveFpEncodePointHex;
 function X9ECParameters(curve, g, n, h) {
   this.curve = curve;
   this.g = g;
@@ -1898,7 +2668,7 @@ function secp128r1() {
   var b = fromHex("E87579C11079F43DD824993C2CEE5ED3");
   var n = fromHex("FFFFFFFE0000000075A30D1B9038A115");
   var h = BigInteger.ONE;
-  var curve = new EurveFp(p, a, b);
+  var curve = new CurveFp(p, a, b);
   var G = curve.decodePointHex("04161FF7528B899B2D0C28607CA52C5B86CF5AC8395BAFEB13C02DA292DDED7A83");
   return new X9ECParameters(curve, G, n, h);
 }
@@ -1908,7 +2678,7 @@ function secp160k1() {
   var b = fromHex("7");
   var n = fromHex("0100000000000000000001B8FA16DFAB9ACA16B6B3");
   var h = BigInteger.ONE;
-  var curve = new EurveFp(p, a, b);
+  var curve = new CurveFp(p, a, b);
   var G = curve.decodePointHex("043B4C382CE37AA192A4019E763036F4F5DD4D7EBB938CF935318FDCED6BC28286531733C3F03C4FEE");
   return new X9ECParameters(curve, G, n, h);
 }
@@ -1918,7 +2688,7 @@ function secp160r1() {
   var b = fromHex("1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45");
   var n = fromHex("0100000000000000000001F4C8F927AED3CA752257");
   var h = BigInteger.ONE;
-  var curve = new EurveFp(p, a, b);
+  var curve = new CurveFp(p, a, b);
   var G = curve.decodePointHex("044A96B5688EF573284664698968C38BB913CBFC8223A628553168947D59DCC912042351377AC5FB32");
   return new X9ECParameters(curve, G, n, h);
 }
@@ -1928,7 +2698,7 @@ function secp192k1() {
   var b = fromHex("3");
   var n = fromHex("FFFFFFFFFFFFFFFFFFFFFFFE26F2FC170F69466A74DEFD8D");
   var h = BigInteger.ONE;
-  var curve = new EurveFp(p, a, b);
+  var curve = new CurveFp(p, a, b);
   var G = curve.decodePointHex("04DB4FF10EC057E9AE26B07D0280B7F4341DA5D1B1EAE06C7D9B2F2F6D9C5628A7844163D015BE86344082AA88D95E2F9D");
   return new X9ECParameters(curve, G, n, h);
 }
@@ -1938,7 +2708,7 @@ function secp192r1() {
   var b = fromHex("64210519E59C80E70FA7E9AB72243049FEB8DEE146B9B1");
   var n = fromHex("FFFFFFFFFFFFFFFFFFFFFFFF99DEF836146BC9B1B4D22831");
   var h = BigInteger.ONE;
-  var curve = new EurveFp(p, a, b);
+  var curve = new CurveFp(p, a, b);
   var G = curve.decodePointHex("04188DA80EB03090F67CBF20EB43A18800F4FF0AFD82FF101207192B95FFC8DA78631011ED6B24CDD573F977A11E794811");
   return new X9ECParameters(curve, G, n, h);
 }
@@ -1948,7 +2718,7 @@ function secp224r1() {
   var b = fromHex("B4050A850C04B3ABF54132565044B0B7D7BFD8BA270B39432355FFB4");
   var n = fromHex("FFFFFFFFFFFFFFFFFFFFFFFFFFFF16A2E0B8F03E13DD29455C5C2A3D");
   var h = BigInteger.ONE;
-  var curve = new EurveFp(p, a, b);
+  var curve = new CurveFp(p, a, b);
   var G = curve.decodePointHex("04B70E0CBD6BB4BF7F321390B94A03C1D356C21122343280D6115C1D21BD376388B5F723FB4C22DFE6CD4375A05A07476444D5819985007E34");
   return new X9ECParameters(curve, G, n, h);
 }
@@ -1958,7 +2728,7 @@ function secp256r1() {
   var b = fromHex("5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B");
   var n = fromHex("FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
   var h = BigInteger.ONE;
-  var curve = new EurveFp(p, a, b);
+  var curve = new CurveFp(p, a, b);
   var G = curve.decodePointHex("046B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C2964FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
   return new X9ECParameters(curve, G, n, h);
 }
@@ -1992,7 +2762,7 @@ function set_ec_params(name) {
   this.n = c.getN().toString();
 }
 function getCurve() {
-  return new EurveFp(
+  return new CurveFp(
     new BigInteger(this.q),
     new BigInteger(this.a),
     new BigInteger(this.b)

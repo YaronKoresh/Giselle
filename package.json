@@ -2,8 +2,8 @@
   "name": "giselle",
   "type": "module",
   "main": "./index.mjs",
-  "version": "1.0.0",
-  "description": "Giselle cipher, is a symetric key cipher, based on the XOR binary operation & custom bases conversion.",
+  "version": "2.0.0",
+  "description": "Giselle cipher, is a symetric key cipher, based on the XOR, base conversion, Scrypt & One Time Pad algorithm.",
   "author": "Yaron Koresh <aharonkoresh1@gmail.com>",
   "scripts": {
     "test": "echo \"No test specified\" && exit 0"
@@ -17,7 +17,12 @@
     "url": "https://github.com/YaronKoresh/giselle.git"
   },
  "keywords": [
+    "emoji",
+    "utf8",
     "giselle",
+    "scrypt",
+    "otp",
+    "pad",
     "base",
     "elliptic",
     "curve",
@@ -44,6 +49,7 @@
     "password"
   ],
   "dependencies": {
-    "@yaronkoresh/bases": "^3.0.0"
+    "buffer": "^6.0.3",
+    "@yaronkoresh/bases": "^4.0.0"
   }
 }

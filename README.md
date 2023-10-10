@@ -1,25 +1,29 @@
 
-# Giselle v1.0.0
+# Giselle v2.0.0
 
-### Giselle cipher, is a symetric key cipher, based on the XOR binary operation & custom bases conversion.
+### Giselle cipher, is a symetric key cipher, based on the XOR, base conversion, Scrypt & One Time Pad algorithm.
 
 ### Supports the Elliptic-curve Diffie–Hellman (ECDH) key agreement protocol.
 
+### Supports the usage of emojis inside the passwords/messages (or any other high level characters...).
+
 # How the algorithm encrypts messages?
 
-1. Textually encodes the message, into binary, using @yaronkoresh/bases.
+1. Padding.
 
-2. Calculates the amount of bits to use inside the encryption process.
+2. UTF-8 encoding.
 
-3. Generates new binary salt, and XOR it with the binary message.
+3. Binary conversion.
 
-4. Numerically encodes the password, a few times, to expand it, using @yaronkoresh/bases.
+4. Salt generation.
 
-5. Splits the password and the XOR results, into one digit chunks.
+5. XOR (salt + message).
 
-6. Adds each XOR bit to the expanded password digit, with the same index.
+6. Loop of Key expansions & XOR (expansion using Scrypt).
 
-7. Encodes most of the data into Base62, then, returns the final results.
+7. Hex conversion.
+
+7. Return ciphertext with salt (seperated with ":").
 
 ### The algorithm decrypts the ciphertext, using the same steps, flipped & in reversed order.
 
@@ -36,11 +40,15 @@ const password = "gt785fy54dt897rgV#Yf3f98ktu9803xdj,9$#Y$#^TV%$GTB";
 // Select a message to encrypt
 const message = "Hello there! my name is Yaroni Makaroni! You have a good taste in choosing npm libraries :)";
 
+// Power level / Cipher strength (any positive integer, 1 or above)
+const strength = 1;
+// 1 is the default, it may take some time to encrypt/decrypt using strength above 1 !
+
 // Encrypt
-const ciphertext = Encrypt(password, message);
+const ciphertext = Encrypt(password, message, strength);
 
 // Decrypt
-const plaintext = Decrypt(password, ciphertext);
+const plaintext = Decrypt(password, ciphertext, strength);
 
 // "Hello there! my name is Yaroni Makaroni! You have a good taste in choosing npm libraries :)"
 console.log(plaintext);
@@ -88,6 +96,8 @@ console.log( decryptedSos );
 // I need help! SOS! I can't finish all that ice cream alone!!
 
 ```
+
+### Scrypt implementation from [scrypt-js](http://npmjs.com/package/scrypt-js).
 
 # License
 
