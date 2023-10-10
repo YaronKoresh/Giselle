@@ -32,7 +32,7 @@
 ```
 // Import this package
 
-import { Encrypt, Decrypt } from "secure-caesar"; // or: const { Encrypt, Decrypt } = await import("secure-caesar");
+import { Encrypt, Decrypt } from "giselle"; // or: const { Encrypt, Decrypt } = await import("giselle");
 
 // Select a password
 const password = "gt785fy54dt897rgV#Yf3f98ktu9803xdj,9$#Y$#^TV%$GTB";
@@ -59,7 +59,7 @@ console.log(plaintext);
 ```
 // Import this package
 
-import { Curve } from "secure-caesar"; // or: const { Curve } = await import("secure-caesar");
+import { Curve } from "giselle"; // or: const { Curve } = await import("giselle");
 
 // First friend:
 const curve = new Curve();
