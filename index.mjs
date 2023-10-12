@@ -1,3 +1,39 @@
+// ../_tools_/src/GenerateRandom.js
+import { Bases } from "@yaronkoresh/bases";
+
+// ../_tools_/src/Charsets.js
+var hex = "0123456789abcdef";
+var base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+// ../_tools_/src/GenerateRandom.js
+var SecureRandom8U = function(count) {
+  let bytes = new Uint8Array(count);
+  return crypto.getRandomValues(bytes);
+};
+var SecureRandom16U = function(count) {
+  let bytes = new Uint16Array(count);
+  return crypto.getRandomValues(bytes);
+};
+var GenerateRandomNumber = function(len = 0) {
+  if (len < 1) {
+    len = SecureRandom8U(1)[0];
+  }
+  return SecureRandom16U(len).join("").slice(0, len);
+};
+var GenerateRandomBinary = function(len) {
+  if (len < 1) {
+    len = SecureRandom8U(1)[0];
+  }
+  let ret = "";
+  while (true) {
+    let rand = GenerateRandomNumber(3);
+    ret += Bases(rand, "01", 11, "");
+    if (ret.length >= len) {
+      return ret.slice(0, len);
+    }
+  }
+};
+
 // ../_tools_/src/Zeros.js
 var Zeros = function(str, len) {
   str = str.toString();
@@ -16,313 +52,6 @@ var Split = function(inp, num) {
   }
   return out;
 };
-
-// ../_tools_/src/Math.js
-var Factorial = function(end, start = "1", step = "1", action = "pow") {
-  action = action.toString().toLowerCase();
-  let ret = start.toString();
-  let Func = null;
-  if (action === "mul") {
-    Func = Multiply;
-  } else if (action === "pow") {
-    Func = Power;
-  } else if (action === "add") {
-    Func = Add;
-  } else {
-    console.error("Sequence Error: action was not specified!");
-    return;
-  }
-  for (let i = "0"; Greater(i, end) !== i.toString(); i = Add(i, step)) {
-    ret = Func(ret, i);
-  }
-  return ret;
-};
-var Greater = function(a, b) {
-  a = a.toString().split("");
-  b = b.toString().split("");
-  if (a.length > b.length) {
-    return a.join("");
-  }
-  if (a.length < b.length) {
-    return b.join("");
-  }
-  for (let i = 0; i < a.length; i++) {
-    if (+a[i] > +b[i]) {
-      return a.join("");
-    }
-    if (+a[i] < +b[i]) {
-      return b.join("");
-    }
-  }
-  return true;
-};
-var Multiply = function(...nums) {
-  let ret = nums[0].toString();
-  nums = nums.slice(1);
-  for (let i = 0; i < nums.length; i++) {
-    let num = nums[i].toString();
-    if (Add(num, 0) === "0") {
-      return "0";
-    }
-    let value = ret;
-    let counter = "2";
-    while (true) {
-      if (Greater(counter, num) === counter) {
-        break;
-      }
-      ret = Add(ret, value);
-      counter = Add(counter, 1);
-    }
-  }
-  return ret;
-};
-var Power = function(...nums) {
-  let ret = nums[0].toString();
-  nums = nums.slice(1);
-  for (let i = 0; i < nums.length; i++) {
-    let num = nums[i].toString();
-    if (Add(num, 0) === "0") {
-      ret = "1";
-    }
-    let value = ret;
-    let counter = "2";
-    while (true) {
-      if (Greater(counter, num) === counter) {
-        break;
-      }
-      ret = Multiply(ret, value);
-      counter = Add(counter, 1);
-    }
-  }
-  return ret;
-};
-var Add = function(...nums) {
-  nums = nums.map((num) => num.toString().split("").reverse());
-  let ret = ["0"];
-  for (let i = 0; i < Math.max(...nums.map((num) => num.length)); i++) {
-    let sum = 0;
-    nums.map((num) => parseInt(num[i] ?? 0)).map(function(n) {
-      sum += n;
-    });
-    sum = sum.toString().split("").reverse();
-    for (let j = 0; j < sum.length; j++) {
-      let index = j + i;
-      ret[index] = ret[index] ?? "0";
-      let n = (parseInt(ret[index]) + parseInt(sum[j] ?? 0)).toString().split("").reverse();
-      ret[index] = n[0];
-      if (n.length > 1) {
-        index++;
-        n = n.slice(1).join("");
-        let retToBeChanged = ret.slice(index).reverse().join("");
-        ret = ret.slice(0, index + 1);
-        ret.push(...Add(retToBeChanged, n).split("").reverse());
-      }
-    }
-  }
-  return ret.reverse().join("");
-};
-
-// ../_tools_/src/Round.js
-var RoundUp = function(input, factor) {
-  return factor - input % factor + input;
-};
-
-// ../_tools_/src/Bits.js
-var MeasureBits = function(num, roundUp = true) {
-  return roundUp == true ? Math.ceil(Math.log2(num)) : Math.log2(num);
-};
-
-// ../_tools_/src/Unicode.js
-var NumberToCharset = function(charset, num) {
-  charset = charset.split("");
-  let bs = charset.length;
-  const UpdateOutputValue = function(outputCharsetIndexes2) {
-    let sum = "0";
-    for (let i2 = 0; i2 < outputCharsetIndexes2.length; i2++) {
-      sum = Add(sum, Multiply(Power(bs, i2), outputCharsetIndexes2[i2]));
-    }
-    return sum;
-  };
-  let value = num.toString();
-  let outputCharsetIndexes = ["0"];
-  let outputIndexOutOfUsage = 1;
-  let power = Power(bs, outputIndexOutOfUsage);
-  let outputValue = "0";
-  while (Greater(power, value) !== power) {
-    outputCharsetIndexes.push("0");
-    outputIndexOutOfUsage++;
-    power = Power(bs, outputIndexOutOfUsage);
-  }
-  let currentOutputIndex = outputIndexOutOfUsage - 1;
-  while (currentOutputIndex >= 0) {
-    let indexValue = Power(bs, currentOutputIndex);
-    outputValue = UpdateOutputValue(outputCharsetIndexes);
-    let _outputValue = Add(indexValue, outputValue);
-    while (Greater(_outputValue, value) !== _outputValue) {
-      outputCharsetIndexes[currentOutputIndex] = Add(outputCharsetIndexes[currentOutputIndex], 1);
-      outputValue = _outputValue;
-      _outputValue = Add(indexValue, outputValue);
-    }
-    currentOutputIndex--;
-  }
-  return outputCharsetIndexes.map(function(charsetIndex) {
-    return charset[+charsetIndex];
-  }).reverse().join("");
-};
-var CharsetToNumbers = function(str, charset = null) {
-  let ret = [];
-  str = str.split("").reverse().join("");
-  for (let i = 0; true; i++) {
-    if (typeof str.codePointAt(i) === "undefined") {
-      ret = ret.reverse();
-      while (true) {
-        if (ret.length > 0 && ret[0] === charset.split("")[0]) {
-          ret = ret.slice(1);
-        } else {
-          return ret;
-        }
-      }
-    }
-    ret.push(
-      charset === null ? str.codePointAt(i).toString() : Multiply(Power(charset.length, i), charset.indexOf(str.split("")[i]))
-    );
-  }
-};
-var NumbersToCharset = function(nums, charset = null) {
-  nums = [nums].flat();
-  if (charset === null) {
-    return String.fromCodePoint(...nums.map((value) => parseInt(value))).toString();
-  }
-  let bits = MeasureBits(charset.length);
-  let size = RoundUp(bits, 8) / bits;
-  let ret = nums.map((value) => NumberToCharset(charset, value)).join("");
-  while (true) {
-    if (ret.length > 1 && ret.slice(0, 1) === charset.split("")[0]) {
-      ret = ret.slice(1);
-    } else {
-      return ret;
-    }
-  }
-};
-var StringToBytes = function(str) {
-  let e = new TextEncoder();
-  let arr = e.encode(str);
-  return [...arr];
-};
-var BytesToString = function(...bytes) {
-  bytes = [bytes].flat().flat();
-  bytes = new Uint8Array(bytes);
-  let d = new TextDecoder();
-  return d.decode(bytes);
-};
-
-// ../_tools_/src/Bases.js
-var Bases = function(str, charset, mode, padding = "=") {
-  let from = null;
-  let to = null;
-  if (mode.toString() === "1" || mode.toString().toLowerCase() === "encodestring") {
-    to = charset;
-  } else if (mode.toString() === "0" || mode.toString().toLowerCase() === "decodestring") {
-    from = charset;
-  } else if (mode.toString() === "11" || mode.toString().toLowerCase() === "encodenumber") {
-    from = "0123456789";
-    to = charset;
-  } else if (mode.toString() === "10" || mode.toString().toLowerCase() === "decodenumber") {
-    to = "0123456789";
-    from = charset;
-  }
-  str = str.toString();
-  from = from === null ? from : from.toString();
-  to = to === null ? to : to.toString();
-  let toLength = to === null ? null : to.length;
-  if (typeof toLength === "number" && toLength < 2) {
-    return null;
-  }
-  let toBits = toLength === null ? null : MeasureBits(toLength);
-  let toFloatBits = toLength === null ? null : MeasureBits(toLength, false);
-  let toSize = toBits === null ? null : RoundUp(toBits, 8) / toBits;
-  let toFloat = toFloatBits !== parseInt(toFloatBits);
-  let fromLength = from === null ? null : from.length;
-  if (typeof fromLength === "number" && fromLength < 2) {
-    return null;
-  }
-  let fromBits = fromLength === null ? null : MeasureBits(fromLength);
-  let fromFloatBits = fromLength === null ? null : MeasureBits(fromLength, false);
-  let fromSize = fromBits === null ? null : RoundUp(fromBits, 8) / fromBits;
-  let fromFloat = fromFloatBits !== parseInt(fromFloatBits);
-  let num = "";
-  let out = [];
-  if (from === to) {
-    return str;
-  }
-  if (from !== null) {
-    let re = new RegExp("(" + padding + "){1,}$", "g");
-    str = str.replaceAll(re, "");
-  }
-  if (from !== null && to !== null) {
-    CharsetToNumbers(str, from).reverse().map(function(value) {
-      num = Add(num, value);
-    });
-    out = NumbersToCharset(num, to);
-  } else if (from === null && to !== null && toFloat === true) {
-    console.error("String Encoding/Decoding with some bases may be unsupported!");
-    console.error("Base" + toLength + " is unfortunately one of them.");
-    return false;
-  } else if (from === null && to !== null) {
-    let bytes = StringToBytes(str);
-    let bin = bytes.map((byte) => Zeros((+byte).toString(2), 8)).join("");
-    bin += "0".repeat((toBits - bin.length % toBits) % toBits);
-    let bins = Split(bin, toBits);
-    let values = bins.map((b) => parseInt(b, 2));
-    out = NumbersToCharset(values, to);
-  } else if (from !== null && to === null && fromFloat === true) {
-    console.error("String Encoding/Decoding with some bases may be unsupported!");
-    console.error("Base" + toLength + " is unfortunately one of them.");
-    return false;
-  } else if (from !== null && to === null) {
-    let charsLength = Split(str, fromSize).length;
-    let values = CharsetToNumbers(str, from);
-    let bin = values.map((v) => Zeros(parseInt(v).toString(2), fromBits)).join("").slice(0, charsLength * 8);
-    let bytes = Split(bin, 8).map((b) => parseInt(b, 2));
-    out = BytesToString(bytes);
-  }
-  if (toSize !== null) {
-    out += padding.repeat((toSize - out.length % toSize) % toSize);
-  }
-  return out;
-};
-
-// ../_tools_/src/Charsets.js
-var hex = "0123456789abcdef";
-
-// ../_tools_/src/GenerateRandom.js
-var SecureRandom8U = function(count2) {
-  let bytes = new Uint8Array(count2);
-  return crypto.getRandomValues(bytes);
-};
-var SecureRandom16U = function(count2) {
-  let bytes = new Uint16Array(count2);
-  return crypto.getRandomValues(bytes);
-};
-var GenerateRandomNumber = function(len = 0) {
-  if (len < 1) {
-    len = SecureRandom8U(1)[0];
-  }
-  return SecureRandom16U(len).join("").slice(0, len);
-};
-var GenerateRandomBinary = function(len) {
-  if (len < 1) {
-    len = SecureRandom8U(1)[0];
-  }
-  let ret = "";
-  while (true) {
-    ret += Bases(GenerateRandomNumber(1), "01", 11, "");
-    if (ret.length >= len) {
-      return ret.slice(0, len);
-    }
-  }
-};
-var GenerateRandom = GenerateRandomNumber;
 
 // ../_tools_/src/Scrypt.js
 var buffer = await import("buffer/index.js");
@@ -615,13 +344,13 @@ function ensureInteger(value, name) {
   }
   return value;
 }
-var Scrypt = function(password, salt = GenerateRandom(6), len = 29, power = 1) {
+var Scrypt = function(password, salt, len = 8, power = 1) {
   let N = Math.pow(2, power);
   let r = Math.pow(8, power);
   let p = Math.pow(4, power);
   let dkLen = len;
   let ret = {
-    salt,
+    salt: salt ?? password,
     cost: N,
     memory: r,
     threads: p,
@@ -770,7 +499,24 @@ var Scrypt = function(password, salt = GenerateRandom(6), len = 29, power = 1) {
 };
 
 // ../_tools_/src/Giselle.js
-import { Bases as Bases3 } from "@yaronkoresh/bases";
+import { Add as Add2, Multiply as Multiply2, Power as Power2, Greater as Greater2, RangedOperation } from "@yaronkoresh/math";
+
+// ../_tools_/src/Unicode.js
+import { Multiply, Power, Add, Greater } from "@yaronkoresh/math";
+var StringToBytes = function(str) {
+  let e = new TextEncoder();
+  let arr = e.encode(str);
+  return [...arr];
+};
+var BytesToString = function(...bytes) {
+  bytes = [bytes].flat().flat();
+  bytes = new Uint8Array(bytes);
+  let d = new TextDecoder();
+  return d.decode(bytes);
+};
+
+// ../_tools_/src/Giselle.js
+import { Bases as Bases2 } from "@yaronkoresh/bases";
 
 // ../_tools_/src/Xor.js
 var XorBinaryString = function(a, b) {
@@ -783,81 +529,57 @@ var XorBinaryString = function(a, b) {
   return res;
 };
 
-// ../_tools_/src/Padding.js
-import { Bases as Bases2 } from "@yaronkoresh/bases";
-var paddingLengthFactor = 8;
-var Pad = function(msg) {
-  msg = msg.toString();
-  const diff = PaddingLength(msg);
-  if (diff == 0) {
-    return msg;
-  }
-  let hash = Scrypt(msg, msg, paddingLengthFactor, 1).hash.toString().slice(0, diff);
-  return hash + msg;
-};
-var Unpad = function(paddedText) {
-  paddedText = paddedText.toString();
-  let len = paddedText.length;
-  for (let i = paddingLengthFactor; i < paddingLengthFactor * 2 - 1; i++) {
-    const maybeHash = paddedText.slice(0, i);
-    const msg = paddedText.slice(i);
-    let hash = Scrypt(msg, msg, paddingLengthFactor, 1).hash.toString().slice(0, i);
-    if (hash == maybeHash) {
-      return msg;
-    }
-  }
-  return paddedText;
-};
-var PaddingLength = function(txt) {
-  return RoundUp(txt.length, paddingLengthFactor) - txt.length + paddingLengthFactor;
-};
-
 // ../_tools_/src/Giselle.js
+import { Pad, Unpad } from "scrypt-padding";
 var Encrypt = function(key, msg, power = 1) {
-  power = Math.ceil(power, 1);
-  let loopPower = Math.ceil(Factorial((power - 1) * 100), 1);
+  power = Greater2(power, 1);
+  power = power === true ? 1 : power;
+  let loopPower = Greater2(RangedOperation(Power2(100, power - 1), 10, 10), 1);
+  loopPower = loopPower === true ? 1 : loopPower;
   let pad = Pad(msg);
   let bytes = StringToBytes(pad);
-  let bins = bytes.map((byte) => Bases3(byte, "01", 11, ""));
+  let bins = bytes.map((byte) => Bases2(byte, "01", 11, ""));
   let bin = bins.map((b) => Zeros(b, 8)).join("");
   let salt = GenerateRandomBinary(bin.length);
   let bin2 = XorBinaryString(salt, bin);
-  for (let i = "0"; Greater(i, loopPower) !== i.toString(); i = Add(i, 1)) {
+  for (let i = "0"; Greater2(i, loopPower) !== i.toString(); i = Add2(i, 1)) {
     key = ExpandKey(key, bin.length, power);
     bin2 = XorBinaryString(key, bin2);
   }
   let out64 = Split(bin2, 4);
-  out64 = out64.map((b) => Bases3(b, "01", 10, ""));
-  out64 = out64.map((b) => Bases3(b, hex, 11, ""));
+  out64 = out64.map((b) => Bases2(b, "01", 10, ""));
+  out64 = out64.map((b) => Bases2(b, base64, 11, ""));
   out64 = out64.join("");
   let salt64 = Split(salt, 4);
-  salt64 = salt64.map((b) => Bases3(b, "01", 10, ""));
-  salt64 = salt64.map((b) => Bases3(b, hex, 11, ""));
+  salt64 = salt64.map((b) => Bases2(b, "01", 10, ""));
+  salt64 = salt64.map((b) => Bases2(b, base64, 11, ""));
   salt64 = salt64.join("");
   return [out64, salt64].join(":");
 };
 var Decrypt = function(key, ciphertext, power = 1) {
-  power = Math.ceil(power, 1);
-  let loopPower = Math.ceil(Factorial((power - 1) * 100), 1);
+  power = Greater2(power, 1);
+  power = power === true ? 1 : power;
+  let loopPower = Greater2(RangedOperation(Power2(100, power - 1), 10, 10), 1);
+  loopPower = loopPower === true ? 1 : loopPower;
   let in64 = ciphertext.split(":")[0];
   let salt64 = ciphertext.split(":")[1];
   let salt = salt64.split("");
-  salt = salt.map((b) => Bases3(b, hex, 10, ""));
-  salt = salt.map((b) => Bases3(b, "01", 11, ""));
+  salt = salt.map((b) => Bases2(b, base64, 10, ""));
+  salt = salt.map((b) => Bases2(b, "01", 11, ""));
   salt = salt.map((b) => Zeros(b, 4));
   salt = salt.join("");
   let bin2 = in64.split("");
-  bin2 = bin2.map((b) => Bases3(b, hex, 10, ""));
-  bin2 = bin2.map((b) => Bases3(b, "01", 11, ""));
+  bin2 = bin2.map((b) => Bases2(b, base64, 10, ""));
+  bin2 = bin2.map((b) => Bases2(b, "01", 11, ""));
   bin2 = bin2.map((b) => Zeros(b, 4));
   bin2 = bin2.join("");
-  for (let i = "0"; Greater(i, loopPower) !== i.toString(); i = Add(i, 1)) {
+  for (let i = "0"; Greater2(i, loopPower) !== i.toString(); i = Add2(i, 1)) {
     key = ExpandKey(key, salt.length, power);
     bin2 = XorBinaryString(key, bin2);
   }
   let bin = XorBinaryString(salt, bin2);
   let bins = Split(bin, 8);
-  let bytes = bins.map((b) => Bases3(b, "01", 10, ""));
+  let bytes = bins.map((b) => Bases2(b, "01", 10, ""));
   let pad = BytesToString(...bytes);
   let msg = Unpad(pad);
   return msg;
@@ -866,8 +588,8 @@ var ExpandKey = function(key, bits, power) {
   let bytes = parseInt(bits) / 8;
   key = Scrypt(key, key, bytes, Math.floor(power, 4)).hash.toString();
   key = Split(key, 1);
-  key = key.map((hx) => Bases3(hx, hex, 10, ""));
-  key = key.map((num) => Bases3(num, "01", 11, ""));
+  key = key.map((hx) => Bases2(hx, hex, 10, ""));
+  key = key.map((num) => Bases2(num, "01", 11, ""));
   key = key.map((b) => Zeros(b, 4));
   key = key.join("");
   return key;

@@ -1,5 +1,5 @@
 
-# Giselle v2.0.0
+# Giselle v3.0.0
 
 ### Giselle cipher, is a symetric key cipher, based on the XOR, base conversion, Scrypt & One Time Pad algorithm.
 

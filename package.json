@@ -2,11 +2,11 @@
   "name": "giselle",
   "type": "module",
   "main": "./index.mjs",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Giselle cipher, is a symetric key cipher, based on the XOR, base conversion, Scrypt & One Time Pad algorithm.",
   "author": "Yaron Koresh <aharonkoresh1@gmail.com>",
   "scripts": {
-    "test": "echo \"No test specified\" && exit 0"
+    "test": "node test.mjs"
   },
   "license": {
     "type": "MIT",
@@ -49,7 +49,9 @@
     "password"
   ],
   "dependencies": {
-    "buffer": "^6.0.3",
-    "@yaronkoresh/bases": "^4.0.0"
+    "scrypt-padding": "^1.0.0",
+    "@yaronkoresh/math": "^2.0.0",
+    "@yaronkoresh/bases": "^5.0.0",
+    "buffer": "^6.0.3"
   }
 }
