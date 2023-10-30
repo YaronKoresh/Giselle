@@ -1,11 +1,5 @@
 // ../_tools_/src/GenerateRandom.js
-import { Bases } from "@yaronkoresh/bases";
-
-// ../_tools_/src/Charsets.js
-var hex = "0123456789abcdef";
-var base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-// ../_tools_/src/GenerateRandom.js
+import { Bases, hex, base62, base64 } from "@yaronkoresh/math";
 var SecureRandom8U = function(count) {
   let bytes = new Uint8Array(count);
   return crypto.getRandomValues(bytes);
@@ -20,6 +14,7 @@ var GenerateRandomNumber = function(len = 0) {
   }
   return SecureRandom16U(len).join("").slice(0, len);
 };
+var decimal = "0123456789";
 var GenerateRandomBinary = function(len) {
   if (len < 1) {
     len = SecureRandom8U(1)[0];
@@ -27,30 +22,11 @@ var GenerateRandomBinary = function(len) {
   let ret = "";
   while (true) {
     let rand = GenerateRandomNumber(3);
-    ret += Bases(rand, "01", 11, "");
+    ret += Bases(rand, decimal, "01");
     if (ret.length >= len) {
       return ret.slice(0, len);
     }
   }
-};
-
-// ../_tools_/src/Zeros.js
-var Zeros = function(str, len) {
-  str = str.toString();
-  while (str.length < len) {
-    str = "0" + str;
-  }
-  return str;
-};
-
-// ../_tools_/src/Split.js
-var Split = function(inp, num) {
-  inp = inp.toString();
-  var out = [];
-  for (var i = 0; i < inp.length; i += num) {
-    out.push(inp.substring(i, i + num));
-  }
-  return out;
 };
 
 // ../_tools_/src/Scrypt.js
@@ -499,24 +475,7 @@ var Scrypt = function(password, salt, len = 8, power = 1) {
 };
 
 // ../_tools_/src/Giselle.js
-import { Add as Add2, Multiply as Multiply2, Power as Power2, Greater as Greater2, RangedOperation } from "@yaronkoresh/math";
-
-// ../_tools_/src/Unicode.js
-import { Multiply, Power, Add, Greater } from "@yaronkoresh/math";
-var StringToBytes = function(str) {
-  let e = new TextEncoder();
-  let arr = e.encode(str);
-  return [...arr];
-};
-var BytesToString = function(...bytes) {
-  bytes = [bytes].flat().flat();
-  bytes = new Uint8Array(bytes);
-  let d = new TextDecoder();
-  return d.decode(bytes);
-};
-
-// ../_tools_/src/Giselle.js
-import { Bases as Bases2 } from "@yaronkoresh/bases";
+import { Zeros, Split, Add, Multiply, Power, Greater, RangedOperation, StringToBytes, BytesToString, RoundUp, MeasureBits, Bases as Bases2, base64 as base642, hex as hex2 } from "@yaronkoresh/math";
 
 // ../_tools_/src/Xor.js
 var XorBinaryString = function(a, b) {
@@ -531,55 +490,53 @@ var XorBinaryString = function(a, b) {
 
 // ../_tools_/src/Giselle.js
 import { Pad, Unpad } from "scrypt-padding";
+var decimal2 = "0123456789";
+var binary = "01";
 var Encrypt = function(key, msg, power = 1) {
-  power = Greater2(power, 1);
+  power = Greater(power, 1);
   power = power === true ? 1 : power;
-  let loopPower = Greater2(RangedOperation(Power2(100, power - 1), 10, 10), 1);
+  let loopPower = Greater(RangedOperation(Power(100, power - 1), 10, 10), 1);
   loopPower = loopPower === true ? 1 : loopPower;
   let pad = Pad(msg);
   let bytes = StringToBytes(pad);
-  let bins = bytes.map((byte) => Bases2(byte, "01", 11, ""));
+  let bins = bytes.map((byte) => Bases2(byte, decimal2, binary));
   let bin = bins.map((b) => Zeros(b, 8)).join("");
   let salt = GenerateRandomBinary(bin.length);
   let bin2 = XorBinaryString(salt, bin);
-  for (let i = "0"; Greater2(i, loopPower) !== i.toString(); i = Add2(i, 1)) {
+  for (let i = "0"; Greater(i, loopPower) !== i.toString(); i = Add(i, 1)) {
     key = ExpandKey(key, bin.length, power);
     bin2 = XorBinaryString(key, bin2);
   }
   let out64 = Split(bin2, 4);
-  out64 = out64.map((b) => Bases2(b, "01", 10, ""));
-  out64 = out64.map((b) => Bases2(b, base64, 11, ""));
+  out64 = out64.map((b) => Bases2(b, binary, base642));
   out64 = out64.join("");
   let salt64 = Split(salt, 4);
-  salt64 = salt64.map((b) => Bases2(b, "01", 10, ""));
-  salt64 = salt64.map((b) => Bases2(b, base64, 11, ""));
+  salt64 = salt64.map((b) => Bases2(b, binary, base642));
   salt64 = salt64.join("");
   return [out64, salt64].join(":");
 };
 var Decrypt = function(key, ciphertext, power = 1) {
-  power = Greater2(power, 1);
+  power = Greater(power, 1);
   power = power === true ? 1 : power;
-  let loopPower = Greater2(RangedOperation(Power2(100, power - 1), 10, 10), 1);
+  let loopPower = Greater(RangedOperation(Power(100, power - 1), 10, 10), 1);
   loopPower = loopPower === true ? 1 : loopPower;
   let in64 = ciphertext.split(":")[0];
   let salt64 = ciphertext.split(":")[1];
   let salt = salt64.split("");
-  salt = salt.map((b) => Bases2(b, base64, 10, ""));
-  salt = salt.map((b) => Bases2(b, "01", 11, ""));
+  salt = salt.map((b) => Bases2(b, base642, binary));
   salt = salt.map((b) => Zeros(b, 4));
   salt = salt.join("");
   let bin2 = in64.split("");
-  bin2 = bin2.map((b) => Bases2(b, base64, 10, ""));
-  bin2 = bin2.map((b) => Bases2(b, "01", 11, ""));
+  bin2 = bin2.map((b) => Bases2(b, base642, binary));
   bin2 = bin2.map((b) => Zeros(b, 4));
   bin2 = bin2.join("");
-  for (let i = "0"; Greater2(i, loopPower) !== i.toString(); i = Add2(i, 1)) {
+  for (let i = "0"; Greater(i, loopPower) !== i.toString(); i = Add(i, 1)) {
     key = ExpandKey(key, salt.length, power);
     bin2 = XorBinaryString(key, bin2);
   }
   let bin = XorBinaryString(salt, bin2);
   let bins = Split(bin, 8);
-  let bytes = bins.map((b) => Bases2(b, "01", 10, ""));
+  let bytes = bins.map((b) => Bases2(b, binary, decimal2));
   let pad = BytesToString(...bytes);
   let msg = Unpad(pad);
   return msg;
@@ -588,8 +545,7 @@ var ExpandKey = function(key, bits, power) {
   let bytes = parseInt(bits) / 8;
   key = Scrypt(key, key, bytes, Math.floor(power, 4)).hash.toString();
   key = Split(key, 1);
-  key = key.map((hx) => Bases2(hx, hex, 10, ""));
-  key = key.map((num) => Bases2(num, "01", 11, ""));
+  key = key.map((hx) => Bases2(hx, hex2, binary, ""));
   key = key.map((b) => Zeros(b, 4));
   key = key.join("");
   return key;
